@@ -1,9 +1,9 @@
 <?php
 // config/database.php
 $host = 'localhost';
-$dbname = 'erp_system';
-$username = 'root';
-$password = '';
+$dbname = 'rmpolybd_erpsys';
+$username = 'rmpolybd_erpsys';
+$password = 'rm.bderpsys';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
