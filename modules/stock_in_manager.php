@@ -1,5 +1,11 @@
 <?php
 session_start();
+
+// Security headers
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+
 if (!isset($_SESSION['user_logged_in']) || $_SESSION['user_logged_in'] !== true) {
     header('Location: ../login.php');
     exit;
@@ -16,27 +22,43 @@ $rowsPerPage = 10;
 $offset = ($page - 1) * $rowsPerPage;
 
 // Search
-$search = isset($_GET['search']) ? $_GET['search'] : '';
-$searchClause = $search ? "WHERE s.id LIKE '%$search%' OR s.mfg_source LIKE '%$search%'" : '';
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+$searchClause = '';
+$params = [];
+
+if ($search) {
+    $searchClause = "WHERE s.id LIKE ? OR s.mfg_source LIKE ?";
+    $params = ["%$search%", "%$search%"];
+}
 
 // Get total count
-$countStmt = $pdo->query("SELECT COUNT(*) as total FROM stock_in $searchClause");
+$countSql = "SELECT COUNT(*) as total FROM stock_in s";
+if ($searchClause) {
+    $countSql .= " " . $searchClause;
+}
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($params);
 $totalRows = $countStmt->fetch()['total'];
 $totalPages = ceil($totalRows / $rowsPerPage);
 
 // Get stock in records
-$stmt = $pdo->prepare("SELECT s.*, 
-                       COALESCE(SUM(i.qty), 0) as total_qty,
-                       GROUP_CONCAT(DISTINCT i.qty_unit) as qty_units,
-                       COALESCE(SUM(i.pkg), 0) as total_pkg,
-                       GROUP_CONCAT(DISTINCT i.pkg_unit) as pkg_units
-                       FROM stock_in s
-                       LEFT JOIN stock_in_items i ON s.id = i.stock_in_id
-                       $searchClause
-                       GROUP BY s.id
-                       ORDER BY s.entry_date DESC, s.id DESC
-                       LIMIT ? OFFSET ?");
-$stmt->execute([$rowsPerPage, $offset]);
+$sql = "SELECT s.*, 
+               COALESCE(SUM(i.qty), 0) as total_qty,
+               GROUP_CONCAT(DISTINCT i.qty_unit) as qty_units,
+               COALESCE(SUM(i.pkg), 0) as total_pkg,
+               GROUP_CONCAT(DISTINCT i.pkg_unit) as pkg_units
+        FROM stock_in s
+        LEFT JOIN stock_in_items i ON s.id = i.stock_in_id";
+if ($searchClause) {
+    $sql .= " " . $searchClause;
+}
+$sql .= " GROUP BY s.id
+           ORDER BY s.entry_date DESC, s.id DESC
+           LIMIT ? OFFSET ?";
+
+$stmt = $pdo->prepare($sql);
+$paramsForQuery = array_merge($params, [$rowsPerPage, $offset]);
+$stmt->execute($paramsForQuery);
 $stockInRecords = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>

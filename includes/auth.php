@@ -1,5 +1,11 @@
 <?php
 // includes/auth.php - Authentication handler
+
+// Security headers
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+
 session_start();
 
 require_once '../config/database.php';
