@@ -1,3 +1,9 @@
+<?php
+// Security headers for login page
+header('X-Frame-Options: SAMEORIGIN');
+header('X-Content-Type-Options: nosniff');
+header('X-XSS-Protection: 1; mode=block');
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>

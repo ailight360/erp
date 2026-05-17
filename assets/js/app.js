@@ -12,18 +12,13 @@ function toggleSubmenu(id) {
 function setTheme(theme) {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
-    
-    // Save to database via AJAX
-    fetch('includes/api_settings.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ key: 'theme', value: theme })
-    });
 }
 
-// Load saved theme
-const savedTheme = localStorage.getItem('theme') || 'light';
-setTheme(savedTheme);
+// Load saved theme on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    setTheme(savedTheme);
+});
 
 // Dynamic row management for Stock In/Out
 let rowCount = 0;

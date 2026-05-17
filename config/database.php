@@ -31,16 +31,25 @@ function getCompanies($pdo) {
 }
 
 function getCompanyProfile($pdo) {
-    $stmt = $pdo->query("SELECT * FROM company_profile LIMIT 1");
-    return $stmt->fetch();
+    try {
+        $stmt = $pdo->query("SELECT * FROM company_profile LIMIT 1");
+        $result = $stmt->fetch();
+        return $result ?: ['company_name' => 'ERP System', 'address' => '', 'mobile' => '', 'email' => ''];
+    } catch (PDOException $e) {
+        return ['company_name' => 'ERP System', 'address' => '', 'mobile' => '', 'email' => ''];
+    }
 }
 
 function getSettings($pdo) {
-    $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
-    $settings = [];
-    while ($row = $stmt->fetch()) {
-        $settings[$row['setting_key']] = $row['setting_value'];
+    try {
+        $stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
+        $settings = [];
+        while ($row = $stmt->fetch()) {
+            $settings[$row['setting_key']] = $row['setting_value'];
+        }
+        return $settings ?: ['theme' => 'light', 'accent_color' => '#3b82f6', 'layout' => 'auto'];
+    } catch (PDOException $e) {
+        return ['theme' => 'light', 'accent_color' => '#3b82f6', 'layout' => 'auto'];
     }
-    return $settings;
 }
 ?>
